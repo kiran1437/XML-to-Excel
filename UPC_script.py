@@ -14,6 +14,7 @@ Out_path = 'Vod_poc.xlsx'
 
 
 def CreateRow(xml_row_node):
+    """Returns a single row(type :Pandas Series)"""
     List_of_datavalues = []
     xml_data_list = xml_row_node.getElementsByTagName('Data')
     for xml_data_node in xml_data_list:
@@ -23,6 +24,7 @@ def CreateRow(xml_row_node):
 
 
 def CreateTable(xml_Worksheet_node):
+    """Returns a single table(type :Pandas DataFrame)"""
     pandas_row_list = []
     xml_row_node_list = xml_Worksheet_node.getElementsByTagName('Row')
     for xml_row_node in xml_row_node_list:
@@ -32,6 +34,8 @@ def CreateTable(xml_Worksheet_node):
 
 
 def ChangeNamesAndTypes(pandas_table):
+    """Change column names to first row values and deletes first row
+        Changes columns that contain all numeric values to numeric type """
     column_names = pandas_table.iloc[0]
     pandas_table = pandas_table.iloc[1:, ].rename(columns=column_names)
     pandas_table = pandas_table.apply(pd.to_numeric, errors='ignore')
@@ -39,6 +43,9 @@ def ChangeNamesAndTypes(pandas_table):
 
 
 def CreateWorkbook(Input_file):
+    """Workbook contains worksheets
+        Each Worksheet contains a Table and Table name
+        Worksheet[0] has table and Worksheet[1] has Table name"""
     Workbook = []
     Thread_names = []
     DOMTree = md.parse(Input_file)
@@ -53,7 +60,8 @@ def CreateWorkbook(Input_file):
     return Workbook
 
 
-def ShortSheetName(name):
+def ShortTableName(name):
+    """Reduses length of Table name,Excel doesn't allow longer names """
     Short_name = name.replace(name.split('___')[0], '')[3:] + '_'
     return Short_name
 
@@ -61,7 +69,7 @@ def ShortSheetName(name):
 def SaveToExcel(Workbook, Output_file):
     writer = pd.ExcelWriter(Output_file)
     for Worksheet in Workbook:
-        Shortened_name = ShortSheetName(Worksheet[1])
+        Shortened_name = ShortTableName(Worksheet[1])
         Worksheet[0].to_excel(writer, sheet_name=Shortened_name, index=False)
     writer.save()
 
