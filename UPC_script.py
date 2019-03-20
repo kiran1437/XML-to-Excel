@@ -5,14 +5,12 @@ Created on Wed Mar 20 10:24:47 2019
 @author: chkiran
 """
 import xml.dom.minidom as md
-import pandas
+import pandas as pd
 import numpy as np
 ##import openpyxl as op
 
-Input_file_path = 'Memory Summary_to_modify.xml'
-Output_file_path = 'Vod_poc.xlsx'
-DOMTree = md.parse(Input_file_path)
-xml_Worksheetnode_list = DOMTree.getElementsByTagName('Worksheet')
+In_path = 'Memory Summary_to_modify.xml'
+Out_path = 'Vod_poc.xlsx'
 
 
 def CreateRow(xml_row_node):
@@ -20,7 +18,7 @@ def CreateRow(xml_row_node):
     xml_data_list = xml_row_node.getElementsByTagName('Data')
     for xml_data_node in xml_data_list:
             List_of_datavalues.append(xml_data_node.childNodes[0].nodeValue)
-            pandas_row = pandas.Series(np.asarray(List_of_datavalues))
+            pandas_row = pd.Series(np.asarray(List_of_datavalues))
     return pandas_row
 
 
@@ -29,28 +27,50 @@ def CreateTable(xml_Worksheet_node):
     xml_row_node_list = xml_Worksheet_node.getElementsByTagName('Row')
     for xml_row_node in xml_row_node_list:
         pandas_row_list.append(CreateRow(xml_row_node))
-    pandas_table = pandas.DataFrame(pandas_row_list)
+    pandas_table = pd.DataFrame(pandas_row_list)
     return pandas_table
 
 
-pandas_table_list = []
-combo_list = []
-for xml_Worksheet_node in xml_Worksheetnode_list:
-    pandas_table = CreateTable(xml_Worksheet_node)
-    pandas_table_list.append(pandas_table)
-    Name = xml_Worksheet_node.getAttribute('ss:Name')
-    table_and_name = [pandas_table, Name]
-    combo_list.append(table_and_name)
+def ChangeNamesAndTypes(pandas_table):
+    column_names = pandas_table.iloc[0]
+    pandas_table = pandas_table.iloc[1:, ].rename(columns=column_names)
+    pandas_table = pandas_table.apply(pd.to_numeric, errors='ignore')
+    return pandas_table
 
 
-writer = pandas.ExcelWriter(Output_file_path)
+def CreateWorkbook(Input_file):
+    Workbook = []
+    Thread_names = []
+    DOMTree = md.parse(Input_file)
+    xml_Worksheetnode_list = DOMTree.getElementsByTagName('Worksheet')
+    for xml_Worksheet_node in xml_Worksheetnode_list:
+        pandas_table = CreateTable(xml_Worksheet_node)
+        pandas_table = ChangeNamesAndTypes(pandas_table)
+        Name = xml_Worksheet_node.getAttribute('ss:Name')
+        Thread_names.append(Name)
+        Worksheet = [pandas_table, Name]
+        Workbook.append(Worksheet)
+    return Workbook
 
-for itr in combo_list:
-    print(itr[1])
-    temp = itr[1].replace(itr[1].split('___')[0], '')[3:] + '_'
-    print(temp)
-    itr[0].to_excel(writer, sheet_name=temp, index=False)
-writer.save()
+
+def ShortSheetName(name):
+    Short_name = name.replace(name.split('___')[0], '')[3:] + '_'
+    return Short_name
+
+
+def SaveToExcel(Workbook, Output_file):
+    writer = pd.ExcelWriter(Output_file)
+    for Worksheet in Workbook:
+        Shortened_name = ShortSheetName(Worksheet[1])
+        Worksheet[0].to_excel(writer, sheet_name=Shortened_name, index=False)
+    writer.save()
+
+
+Workbook = CreateWorkbook(In_path)
+SaveToExcel(Workbook, Out_path)
+
+
+
 
 #for Worksheet in Worksheet_list:
 #    
