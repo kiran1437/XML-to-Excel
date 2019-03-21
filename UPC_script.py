@@ -7,9 +7,12 @@ Created on Wed Mar 20 10:24:47 2019
 import xml.dom.minidom as md
 import pandas as pd
 import numpy as np
-##import openpyxl as op
+import os
 
-In_path = 'Memory Summary_to_modify.xml'
+
+# import openpyxl as op
+
+In_path = 'full.excelrp'
 Out_path = 'Vod_poc.xlsx'
 
 
@@ -42,13 +45,13 @@ def ChangeNamesAndTypes(pandas_table):
     return pandas_table
 
 
-def CreateWorkbook(Input_file):
+def CreateWorkbook(xml_string):
     """Workbook contains worksheets
         Each Worksheet contains a Table and Table name
         Worksheet[0] has table and Worksheet[1] has Table name"""
     Workbook = []
     Thread_names = []
-    DOMTree = md.parse(Input_file)
+    DOMTree = md.parseString(xml_string)
     xml_Worksheetnode_list = DOMTree.getElementsByTagName('Worksheet')
     for xml_Worksheet_node in xml_Worksheetnode_list:
         pandas_table = CreateTable(xml_Worksheet_node)
@@ -61,7 +64,7 @@ def CreateWorkbook(Input_file):
 
 
 def ShortTableName(name):
-    """Reduses length of Table name,Excel doesn't allow longer names """
+    """Reduses length of Table name to write to excel"""
     Short_name = name.replace(name.split('___')[0], '')[3:] + '_'
     return Short_name
 
@@ -74,9 +77,22 @@ def SaveToExcel(Workbook, Output_file):
     writer.save()
 
 
-Workbook = CreateWorkbook(In_path)
-SaveToExcel(Workbook, Out_path)
+def PreParseXml(xml_string):
+    """ Remove tags that cause errors before parsing"""
+    xml_string = xml_string.replace(r'<Category="rprof.profile.stat"/>', '')
+    xml_string = xml_string.replace(r'<Category="rprof.profile.mem.context"/>', '')
+    xml_string = xml_string.replace(r'<Category="name"/>', '')
+    return xml_string
 
+
+file = open(In_path, mode='r')
+xml_string = file.read()
+file.close()
+print('working directory '+os.getcwd())
+xml_string = PreParseXml(xml_string)
+Workbook = CreateWorkbook(xml_string)
+SaveToExcel(Workbook, Out_path)
+print('complete')
 
 
 
