@@ -50,30 +50,46 @@ def CreateWorkbook(xml_string):
         Each Worksheet contains a Table and Table name
         Worksheet[0] has table and Worksheet[1] has Table name"""
     Workbook = []
-    Thread_names = []
     DOMTree = md.parseString(xml_string)
     xml_Worksheetnode_list = DOMTree.getElementsByTagName('Worksheet')
     for xml_Worksheet_node in xml_Worksheetnode_list:
         pandas_table = CreateTable(xml_Worksheet_node)
         pandas_table = ChangeNamesAndTypes(pandas_table)
         Name = xml_Worksheet_node.getAttribute('ss:Name')
-        Thread_names.append(Name)
+        Name = ShortTableName(Name)
         Worksheet = [pandas_table, Name]
         Workbook.append(Worksheet)
     return Workbook
 
 
+def AddIndex(Workbook):
+    Table_names = []
+    Hyperlinks_list = []
+    i = 1
+    for Worksheet in Workbook:
+        name = Worksheet[1]
+        Hyperlink = r'=HYPERLINK("#'+name+r'!B'+str(i)+r'",'+r'"link")'
+        i = i+1
+        Table_names.append(Worksheet[1])
+        Hyperlinks_list.append(Hyperlink)
+    Index_sheet = pd.DataFrame({'Index': Table_names, 'Hyperlinks': Hyperlinks_list})
+    Workbook.insert(0, [Index_sheet, "Index"])
+    return Workbook
+
+
 def ShortTableName(name):
     """Reduses length of Table name to write to excel"""
-    Short_name = name.replace(name.split('___')[0], '')[3:] + '_'
+    if r'(internel)' in name:
+        Short_name = name.replace(r'(internal)', '')
+    else:
+        Short_name = name.replace(name.split('___')[0], '')[4:]
     return Short_name
 
 
 def SaveToExcel(Workbook, Output_file):
     writer = pd.ExcelWriter(Output_file)
     for Worksheet in Workbook:
-        Shortened_name = ShortTableName(Worksheet[1])
-        Worksheet[0].to_excel(writer, sheet_name=Shortened_name, index=False)
+        Worksheet[0].to_excel(writer, sheet_name=Worksheet[1], index=False)
     writer.save()
 
 
@@ -91,6 +107,7 @@ file.close()
 print('working directory '+os.getcwd())
 xml_string = PreParseXml(xml_string)
 Workbook = CreateWorkbook(xml_string)
+Workbook = AddIndex(Workbook)
 SaveToExcel(Workbook, Out_path)
 print('complete')
 
