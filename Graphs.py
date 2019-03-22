@@ -4,12 +4,16 @@ Created on Fri Mar 22 13:33:54 2019
 
 @author: chkiran
 """
-
+import pandas as pd
+import numpy as np
+import os
+import xlsxwriter as xw
 
 class graphs:
     def AddLineChart(writer, name, row_len):
         xlworkbook = writer.book
         xlworksheet = writer.sheets[name]
+        print(xlworksheet)
         row_len = str(row_len)
         chart = xlworkbook.add_chart({'type': 'line'})
         chart.add_series({
@@ -23,5 +27,7 @@ class graphs:
         chart.set_x_axis({'name': 'Time', 'position_axis': 'on_tick'})
         chart.set_y_axis({'name': 'size'})
         chart.set_title({'name': name})
+        print(chart)
+        print(name)
         xlworksheet.insert_chart('I2', chart)
 

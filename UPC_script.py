@@ -107,28 +107,6 @@ def PreParseXml(xml_string):
     return xml_string
 
 
-
-def AddLineChart(writer, name, row_len):
-        xlworkbook = writer.book
-        xlworksheet = writer.sheets[name]
-        print(xlworksheet)
-        row_len = str(row_len)
-        chart = xlworkbook.add_chart({'type': 'line'})
-        chart.add_series({
-            'values': '='+name+'!$D$2:$D$'+row_len+'\'',
-            'name': 'used'
-            })
-        chart.add_series({
-            'values': '='+name+'!$E$2:$E$'+row_len+'\'',
-            'name': 'pool size'
-            })
-        chart.set_x_axis({'name': 'Time', 'position_axis': 'on_tick'})
-        chart.set_y_axis({'name': 'size'})
-        chart.set_title({'name': name})
-        print(chart)
-        print(name)
-        xlworksheet.insert_chart('I2', chart)
-
 file = open(In_path, mode='r')
 xml_string = file.read()
 file.close()
@@ -148,7 +126,10 @@ for Worksheet in Workbook:
 for Worksheet in Workbook:
     name = Worksheet[1]
     row_len = len(Worksheet[0])+1
-    AddLineChart(writer, name, row_len)
+    gp.graphs.AddLineChart(writer, name, row_len)
+
+
+
 
 #
 #xlworkbook = writer.book
