@@ -8,8 +8,10 @@ import xml.dom.minidom as md
 import pandas as pd
 import numpy as np
 import os
+import xlsxwriter as xw
+import Graphs as gp       # custom class
 
-
+# import matplotlib as plt
 # import openpyxl as op
 
 In_path = 'full.excelrp'
@@ -56,9 +58,10 @@ def CreateWorkbook(xml_string):
         pandas_table = CreateTable(xml_Worksheet_node)
         pandas_table = ChangeNamesAndTypes(pandas_table)
         Name = xml_Worksheet_node.getAttribute('ss:Name')
-        Name = ShortTableName(Name)
-        Worksheet = [pandas_table, Name]
-        Workbook.append(Worksheet)
+        if Name.find(r'(internel)') == -1:
+            Name = ShortTableName(Name)
+            Worksheet = [pandas_table, Name]
+            Workbook.append(Worksheet)
     return Workbook
 
 
@@ -87,10 +90,13 @@ def ShortTableName(name):
 
 
 def SaveToExcel(Workbook, Output_file):
-    writer = pd.ExcelWriter(Output_file)
+    writer = pd.ExcelWriter(Output_file,engine = 'xlsxwriter')
     for Worksheet in Workbook:
         Worksheet[0].to_excel(writer, sheet_name=Worksheet[1], index=False)
     writer.save()
+
+    return writer
+
 
 
 def PreParseXml(xml_string):
@@ -113,12 +119,82 @@ print('complete')
 
 
 
+writer = pd.ExcelWriter('new.xlsx',engine = 'xlsxwriter')
+for Worksheet in Workbook:
+    Worksheet[0].to_excel(writer, sheet_name=Worksheet[1], index=False)
+
+for Worksheet in Workbook:
+    name = Worksheet[1]
+    row_len = len(Worksheet[0])+1
+    gp.graphs.AddLineChart(writer, name, row_len)
+
+
+#
+#xlworkbook = writer.book
+#xlworksheet = writer.sheets['PREFS']
+#
+#
+#chart = xlworkbook.add_chart({'type': 'line'})
+#chart.add_series({
+#    'values': '=PREFS!$C$2:$C$127',
+#    'name' : 'peak'
+#    })
+#chart.add_series({
+#    'values': '=PREFS!$D$2:$D$127',
+#    'name' : 'used'
+#    })
+#chart.set_x_axis({'name': 'Index', 'position_axis': 'on_tick'})
+#chart.set_y_axis({'name': 'Value' })
+#chart.set_title ({'name': 'sample'})
+## Turn off chart legend. It is on by default in Excel.
+#
+#
+## Insert the chart into the worksheet.
+#xlworksheet.insert_chart('I2', chart)
+
+writer.save()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#
+#
+#Xl_worksheet = writer.sheets['PREFS']
+#Xl_workbook = writer.book
+#Xl_chart = Xl_workbook.add_chart({'type': 'column'})
+#Xl_chart.add_series({'values': '=PREFS!$C$2:$C$123'})
+#Xl_worksheet.insert_chart('I2',Xl_chart)
+#writer.save()
+#Xl_workbook = xw.Workbook(Out_path)
+#Xl_worksheet = Xl_workbook.get_worksheet_by_name('PREFS')
+#worksheet = Xl_workbook.add_worksheet()
+#Xl_chart = Xl_workbook.add_chart({'type': 'column'})
+#Xl_chart.add_series({'values': '=PREFS!$C$2:$C$123'})
+#Xl_worksheet.insert_chart('I2',Xl_chart)
+#Xl_worksheet1 = writer._get_sheet_name('PREFS')
+
+#
+#workbook  = xw.Workbook(Out_path)
+#worksheet = workbook.get_worksheet_by_name('PREFS')
+#
+
 #for Worksheet in Worksheet_list:
-#    
+#
 #     Name = Worksheet.getAttribute('ss:Name')
 #     Row_list=Worksheet.getElementsByTagName('Row')
 #     Table = pandas.DataFrame()
-#     
+#
 #     for Row in Row_list:
 #         Data_list = Row.getElementsByTagName('Data')
 #         Value_list = []
@@ -126,6 +202,47 @@ print('complete')
 #             Value_list.append(Data.childNodes[0].nodeValue)
 #         row = pandas.Series(np.asarray(Value_list))
 #         print(row)
-#         
+#
 #     Table.append(row,ignore_index= True)
-         
+
+#
+#
+#
+#writer = pd.ExcelWriter('new.xlsx',engine = 'xlsxwriter')
+#for Worksheet in Workbook:
+#    Worksheet[0].to_excel(writer, sheet_name=Worksheet[1], index=False)
+#
+#xlworkbook = writer.book
+#worksheet = writer.sheets['PREFS']
+#
+#
+#
+#
+#chart = xlworkbook.add_chart({'type': 'line'})
+#
+## Configure the series of the chart from the dataframe data.
+#
+#chart.add_series({
+#
+#    'values': '=PREFS!$C$2:$C$127',
+#    'name' : 'peak'
+#
+#})
+#chart.add_series({
+#
+#    'values': '=PREFS!$D$2:$D$127',
+#    'name' : 'used'
+#
+#})
+#
+## Configure the chart axes.
+#chart.set_x_axis({'name': 'Index', 'position_axis': 'on_tick'})
+#chart.set_y_axis({'name': 'Value' })
+#chart.set_title ({'name': 'sample'})
+## Turn off chart legend. It is on by default in Excel.
+#
+#
+## Insert the chart into the worksheet.
+#worksheet.insert_chart('I2', chart)
+#
+#writer.save()
