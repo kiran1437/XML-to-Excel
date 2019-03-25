@@ -13,7 +13,6 @@ class graphs:
     def AddLineChart(writer, name, row_len):
         xlworkbook = writer.book
         xlworksheet = writer.sheets[name]
-        print(xlworksheet)
         row_len = str(row_len)
         chart = xlworkbook.add_chart({'type': 'line'})
         chart.add_series({
@@ -24,10 +23,8 @@ class graphs:
             'values': '='+name+'!$E$2:$E$'+row_len+'\'',
             'name': 'pool size'
             })
-        chart.set_x_axis({'name': 'Time', 'position_axis': 'on_tick'})
+        chart.set_x_axis({'name': 'Time'})
         chart.set_y_axis({'name': 'size'})
         chart.set_title({'name': name})
-        print(chart)
-        print(name)
         xlworksheet.insert_chart('I2', chart)
 

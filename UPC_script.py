@@ -50,7 +50,8 @@ def ChangeNamesAndTypes(pandas_table):
 def CreateWorkbook(xml_string):
     """Workbook contains worksheets
         Each Worksheet contains a Table and Table name
-        Worksheet[0] has table and Worksheet[1] has Table name"""
+        Worksheet[0] has table and Worksheet[1] has Thread name
+        Worksheet[3] has process name"""
     Workbook = []
     DOMTree = md.parseString(xml_string)
     xml_Worksheetnode_list = DOMTree.getElementsByTagName('Worksheet')
@@ -60,7 +61,8 @@ def CreateWorkbook(xml_string):
         Name = xml_Worksheet_node.getAttribute('ss:Name')
         if Name.find(r'(internel)') == -1:
             Name = ShortTableName(Name)
-            Worksheet = [pandas_table, Name]
+            Worksheet = [pandas_table, Name[0], Name[1]]
+            # Name[0] = thread name ,Name[1] process name
             Workbook.append(Worksheet)
     return Workbook
 
@@ -68,14 +70,26 @@ def CreateWorkbook(xml_string):
 def AddIndex(Workbook):
     Table_names = []
     Hyperlinks_list = []
+    Peak_values = []
+    Pool_sizes = []
+    Used_percent = []
+    Process_names = []
     i = 1
     for Worksheet in Workbook:
         name = Worksheet[1]
         Hyperlink = r'=HYPERLINK("#'+name+r'!B'+str(i)+r'",'+r'"link")'
-        i = i+1
-        Table_names.append(Worksheet[1])
         Hyperlinks_list.append(Hyperlink)
-    Index_sheet = pd.DataFrame({'Index': Table_names, 'Hyperlinks': Hyperlinks_list})
+        Table_names.append(Worksheet[1])
+        Process_names.append(Worksheet[2])
+        Peak_values.append(Worksheet[0]['Peak'].max())
+        Pool_sizes.append(Worksheet[0]['Pool Size'].max())
+        percentage =  Worksheet[0]['Peak'].max()/Worksheet[0]['Pool Size'].max()*100
+        Used_percent.append(round(percentage, 2))
+        i = i+1
+    Index_sheet = pd.DataFrame({'Index': Table_names, 'Process name': Process_names,
+                                'Hyperlinks': Hyperlinks_list,
+                                'Peaks': Peak_values, 'Pool sizes': Pool_sizes,
+                                'Used percent': Used_percent})
     Workbook.insert(0, [Index_sheet, "Index"])
     return Workbook
 
@@ -85,8 +99,10 @@ def ShortTableName(name):
     if r'(internel)' in name:
         Short_name = name.replace(r'(internal)', '')
     else:
-        Short_name = name.replace(name.split('___')[0], '')[4:]
-    return Short_name
+        Split_names = name.split('____')
+        Thread_name = Split_names[1]
+        Process_name = Split_names[0]
+    return  Thread_name, Process_name
 
 
 def SaveToExcel(Workbook, Output_file):
@@ -131,6 +147,9 @@ for Worksheet in Workbook:
 
 
 
+writer.save()
+
+
 #
 #xlworkbook = writer.book
 #xlworksheet = writer.sheets['PREFS']
@@ -153,9 +172,6 @@ for Worksheet in Workbook:
 #
 ## Insert the chart into the worksheet.
 #xlworksheet.insert_chart('I2', chart)
-
-writer.save()
-
 
 
 
