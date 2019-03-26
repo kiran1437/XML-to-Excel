@@ -88,10 +88,9 @@ def AddIndex(Workbook):
         i = i+1
     Index_sheet = pd.DataFrame({'Index': Table_names, 'Process name': Process_names,
                                 'Hyperlinks': Hyperlinks_list,
-                                'Peaks': Peak_values, 'Pool sizes': Pool_sizes,
+                                'Peaks': Peak_values, 'Pool size': Pool_sizes,
                                 'Used percent': Used_percent})
     Workbook.insert(0, [Index_sheet, "Index"])
-    return Workbook
 
 
 def ShortTableName(name):
@@ -123,13 +122,23 @@ def PreParseXml(xml_string):
     return xml_string
 
 
+def AddDetailsSheet(Workbook):
+    Details_table = pd.DataFrame(columns = ['Process name','Pool size', 'count'])
+    Details_table['count'] = Workbook[0][0].groupby('Process name')['Process name'].count()
+    Details_table['Pool size'] = Workbook[0][0].groupby('Process name')['Pool size'].sum()
+    Details_table['Process name'] = Details_table.index
+    Workbook.insert(1, [Details_table, "Details", ""])
+
+
+
 file = open(In_path, mode='r')
 xml_string = file.read()
 file.close()
 print('working directory '+os.getcwd())
 xml_string = PreParseXml(xml_string)
 Workbook = CreateWorkbook(xml_string)
-Workbook = AddIndex(Workbook)
+AddIndex(Workbook)
+AddDetailsSheet(Workbook)
 SaveToExcel(Workbook, Out_path)
 print('complete')
 
@@ -150,7 +159,7 @@ for Worksheet in Workbook:
 writer.save()
 
 
-#
+# Workbook[0][0].groupby('Process name')['Peaks','Pool sizes'].count()      pd.concat([sum,count],axis = 1)
 #xlworkbook = writer.book
 #xlworksheet = writer.sheets['PREFS']
 #
