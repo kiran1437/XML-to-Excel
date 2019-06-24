@@ -7,7 +7,7 @@ import MyWorkBook as mb   # custom class
 
 # import openpyxl as op
 
-INPATH = 'full.excelrp'
+INPATH = 'full.xml'
 OUTPATH = 'Vod_poc.xlsx'
 
 obj = mb.MyWorkBook(INPATH,OUTPATH)
