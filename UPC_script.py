@@ -1,3 +1,6 @@
+# The contents of this file have been moved to main and graphs file. Refer main.py
+
+
 # -*- coding: utf-8 -*-
 """
 Created on Wed Mar 20 10:24:47 2019
