@@ -130,20 +130,3 @@ class MyWorkBook(object):
         details_table['Process name'] = details_table.index
         workbook.insert(1, [details_table, "Details", ""])
         return workbook
-
-
-#for Custom_worksheet in Custom_worksheet_list:
-#
-#     Name = Custom_worksheet.getAttribute('ss:Name')
-#     Row_list=Custom_worksheet.getElementsByTagName('Row')
-#     Table = pandas.DataFrame()
-#
-#     for Row in Row_list:
-#         Data_list = Row.getElementsByTagName('Data')
-#         Value_list = []
-#         for Data in Data_list:
-#             Value_list.append(Data.childNodes[0].nodeValue)
-#         row = pandas.Series(np.asarray(Value_list))
-#         print(row)
-#
-#     Table.append(row,ignore_index= True)
